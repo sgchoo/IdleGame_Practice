@@ -1,6 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
+using static UnityEngine.GraphicsBuffer;
 
 /// <summary>
 /// 에너미는 생성되면 그 자리에 가만히 있고
@@ -10,7 +13,6 @@ using UnityEngine;
 
 public enum EnemyState
 {
-    Idle,
     Attack,
     Damaged,
     Die
@@ -18,9 +20,15 @@ public enum EnemyState
 
 public class EnemyController : MonoBehaviour
 {
+    [SerializeField]
+    private float originHP;
+    private float curTime;
+
+    PlayerController player;
+
     [Header("EnemyState")]
     [SerializeField]
-    EnemyState eState = EnemyState.Idle;
+    EnemyState eState = EnemyState.Damaged;
 
 
     [Header("EnemyStats")]
@@ -56,20 +64,27 @@ public class EnemyController : MonoBehaviour
         set { damage = value; }
     }
 
-    private void Start()
+    private void Awake()
     {
-        switch (this.transform.gameObject.layer)
+        EnemySeparate(this.transform.gameObject.layer);
+
+        FindPlayer();
+    }
+
+    private void EnemySeparate(int layer)
+    {
+        switch (layer)
         {
             case (6):
-                EnemyStatsInitalize(10.0f, 10.0f, 0.5f, 1.0f);
+                EnemyStatsInitalize(10.0f, 10.0f, 5.0f, 1.0f);
                 break;
 
             case (7):
-                EnemyStatsInitalize(20.0f, 10.0f, 0.45f, 1.5f);
+                EnemyStatsInitalize(20.0f, 10.0f, 4.5f, 1.5f);
                 break;
 
             case (8):
-                EnemyStatsInitalize(25.0f, 10.0f, 0.4f, 2.0f);
+                EnemyStatsInitalize(25.0f, 10.0f, 4.0f, 2.0f);
                 break;
         }
     }
@@ -80,36 +95,54 @@ public class EnemyController : MonoBehaviour
         MaxMp = mp;
         AttackSpeed = attackSpeed;
         Damage = damage;
+
+        originHP = hp;
+    }
+
+    private void FindPlayer()
+    {
+        player = GameObject.Find("Player").GetComponent<PlayerController>();
     }
 
     private void Update()
     {
         switch (eState)
         {
-            case EnemyState.Idle:      Idle();      break;
             case EnemyState.Attack:    Attack();    break;
             case EnemyState.Damaged:   Damaged();   break;
-            case EnemyState.Die:       Die();       break;
         }
-    }
 
-    private void Idle()
-    {
-
-    }
-
-    private void Attack()
-    {
-
+        Die();
     }
 
     private void Damaged()
     {
+        Debug.Log("eState.Damaged is now playing");
+        if (hp != originHP)
+        {
+            eState = EnemyState.Attack;
+            Debug.Log("eState = Damaged -> Attack");
+        }
+    }
 
+    private void Attack()
+    {
+        Debug.Log("eState.Attack is now playing");
+
+        curTime += Time.deltaTime;
+
+        if (curTime >= attackSpeed)
+        {
+            player.MaxHp -= damage;
+            curTime = 0.0f;
+        }
     }
 
     private void Die()
     {
-
+        if (hp <= 0)
+        {
+            Destroy(this.gameObject);
+        }
     }
 }

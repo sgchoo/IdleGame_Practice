@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -20,12 +21,14 @@ public enum PlayerState
     FoundTarget,
     Move,
     Attack,
-    Damaged,
     Die
 }
 
 public class PlayerController : MonoBehaviour
 {
+    private float originHP;
+    private float curTime;
+
     [Header("PlayerState")]
     [SerializeField]
     private PlayerState pState = PlayerState.Idle;
@@ -79,11 +82,18 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        PlayerStatsInit();
+    }
+
+    private void PlayerStatsInit()
+    {
         MaxHp = 100.0f;
         MaxMp = 100.0f;
         MoveSpeed = 0.8f;
-        AttackSpeed = 0.5f;
+        AttackSpeed = 5.0f;
         Damage = 5.0f;
+
+        originHP = hp;
     }
 
     private void Update()
@@ -93,9 +103,13 @@ public class PlayerController : MonoBehaviour
             case PlayerState.Idle:      Idle();      break;
             case PlayerState.Move:      Move();      break;
             case PlayerState.Attack:    Attack();    break;
-            case PlayerState.Damaged:   Damaged();   break;
             case PlayerState.Die:       Die();       break;
         }
+
+        PlayerDamaged();
+        PlayerDead();
+
+        Debug.Log(target);
     }
 
     private void Idle()
@@ -145,34 +159,67 @@ public class PlayerController : MonoBehaviour
 
         if (Vector2.Distance(this.transform.position, target.transform.position) < 0.8f)
         {
+            if (target == null)
+            {
+                pState = PlayerState.Idle;
+            }
 
+            AttackEnemy(attackSpeed);
+        }
+    }
+
+    private void AttackEnemy(float delayTime)
+    {
+        Debug.Log("Attack the enemy");
+        EnemyController enemy = target.GetComponent<EnemyController>();
+
+        curTime += Time.deltaTime;
+        
+        if (curTime > delayTime)
+        {
+            enemy.MaxHp -= damage;
+            curTime = 0.0f;
         }
 
-        else
+        if (enemy.MaxHp <= 0)
         {
-            Debug.Log("pState = Attack -> Idle");
-            pState = PlayerState.Idle;
-        }
-
-        if (target == null)
-        {
-            Debug.Log("isRunning?");
             pState = PlayerState.Idle;
         }
     }
 
-    //private void AttackEnemy()
-    //{
-    //    Debug.Log("Enemy Attack");
-    //}
-
-    private void Damaged()
+    private void PlayerDamaged()
     {
+        if (hp != originHP)
+        {
+            StartCoroutine("ChangeColor");
+            originHP = hp;
+        }
+    }
 
+    IEnumerator ChangeColor()
+    {
+        SpriteRenderer render = this.GetComponent<SpriteRenderer>();
+        render.color = new Color32(54, 86, 226, 150);
+
+        yield return new WaitForSeconds(1.0f);
+
+        render.color = new Color32(54, 86, 226, 255);
     }
 
     private void Die()
     {
-        isDead = true;
+        if (isDead == true)
+        {
+            Destroy(this.gameObject);
+        }
+    }
+
+    private void PlayerDead()
+    {
+        if (hp <= 0)
+        {
+            isDead = true;
+            pState = PlayerState.Die;
+        }
     }
 }

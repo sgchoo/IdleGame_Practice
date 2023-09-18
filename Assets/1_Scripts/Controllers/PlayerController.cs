@@ -139,7 +139,14 @@ public class PlayerController : MonoBehaviour
                 Vector2 dir = (target.transform.position - this.transform.position).normalized;
                 this.transform.Translate(dir * Time.deltaTime * moveSpeed);
 
-                Debug.Log($"dir vector2 value : {dir.x}");
+                if (dir.x > 0)
+                {
+                    this.gameObject.GetComponent<SpriteRenderer>().flipX = true;
+                }
+                else
+                {
+                    this.gameObject.GetComponent<SpriteRenderer>().flipX = false;
+                }
             }
 
             else

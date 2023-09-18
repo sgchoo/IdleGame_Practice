@@ -13,8 +13,6 @@ using UnityEngine;
 /// 
 /// </summary>
 
-
-
 public enum PlayerState
 {
     Idle,
@@ -79,6 +77,7 @@ public class PlayerController : MonoBehaviour
     [Header("Target")]
     [SerializeField]
     private GameObject target;
+    private GameObject enemy;
 
     private void Awake()
     {
@@ -108,19 +107,18 @@ public class PlayerController : MonoBehaviour
 
         PlayerDamaged();
         PlayerDead();
-
-        Debug.Log(target);
     }
 
     private void Idle()
     {
-        DetectTarget();
+        enemy = GameObject.FindWithTag("Enemy");
+
+        if (enemy == null)      return;
+        else                    DetectTarget();
     }
 
     private void DetectTarget()
     {
-        Debug.Log("pState.Idle isPlaying");
-
         float detectDistance = 100.0f;
 
         Collider2D[] colliders = Physics2D.OverlapBoxAll(Camera.main.transform.position, Vector2.one * detectDistance, 0.0f, 1 << 6);
@@ -129,34 +127,30 @@ public class PlayerController : MonoBehaviour
         {
             target = colliders[0].transform.gameObject;
             pState = PlayerState.Move;
-            Debug.Log("pState = Idle -> Move");
         }
     }
 
     private void Move()
     {
-        Debug.Log("pState.Move isPlaying");
-
         if (target != null)
         {
             if (Vector2.Distance(this.transform.position, target.transform.position) > 0.8f)
             {
                 Vector2 dir = (target.transform.position - this.transform.position).normalized;
                 this.transform.Translate(dir * Time.deltaTime * moveSpeed);
+
+                Debug.Log($"dir vector2 value : {dir.x}");
             }
 
             else
             {
                 pState = PlayerState.Attack;
-                Debug.Log("pState = Move -> Attack");
             }
         }
     }
 
     private void Attack()
     {
-        Debug.Log("pState.Attack isPlaying");
-
         if (Vector2.Distance(this.transform.position, target.transform.position) < 0.8f)
         {
             if (target == null)
@@ -170,7 +164,6 @@ public class PlayerController : MonoBehaviour
 
     private void AttackEnemy(float delayTime)
     {
-        Debug.Log("Attack the enemy");
         EnemyController enemy = target.GetComponent<EnemyController>();
 
         curTime += Time.deltaTime;
@@ -201,7 +194,7 @@ public class PlayerController : MonoBehaviour
         SpriteRenderer render = this.GetComponent<SpriteRenderer>();
         render.color = new Color32(54, 86, 226, 150);
 
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.5f);
 
         render.color = new Color32(54, 86, 226, 255);
     }

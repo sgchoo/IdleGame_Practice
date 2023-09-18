@@ -78,13 +78,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private GameObject target;
     private GameObject enemy;
+    private SpriteRenderer render;
 
     private void Awake()
     {
-        PlayerStatsInit();
+        PlayerInit();
     }
 
-    private void PlayerStatsInit()
+    private void PlayerInit()
     {
         MaxHp = 100.0f;
         MaxMp = 100.0f;
@@ -93,6 +94,8 @@ public class PlayerController : MonoBehaviour
         Damage = 5.0f;
 
         originHP = hp;
+
+        render = this.GetComponent<SpriteRenderer>();
     }
 
     private void Update()
@@ -141,11 +144,11 @@ public class PlayerController : MonoBehaviour
 
                 if (dir.x > 0)
                 {
-                    this.gameObject.GetComponent<SpriteRenderer>().flipX = true;
+                    render.flipX = true;
                 }
                 else
                 {
-                    this.gameObject.GetComponent<SpriteRenderer>().flipX = false;
+                    render.flipX = false;
                 }
             }
 
@@ -198,7 +201,14 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator ChangeColor()
     {
-        SpriteRenderer render = this.GetComponent<SpriteRenderer>();
+        render.color = new Color32(54, 86, 226, 150);
+
+        yield return new WaitForSeconds(0.5f);
+
+        render.color = new Color32(54, 86, 226, 255);
+
+        yield return new WaitForSeconds(0.5f);
+
         render.color = new Color32(54, 86, 226, 150);
 
         yield return new WaitForSeconds(0.5f);
